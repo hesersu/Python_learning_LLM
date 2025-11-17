@@ -47,6 +47,33 @@ def setup_phoenix_tracing():
     return tracer_provider
 
 
+def query_capital(country_name: str, api_key: str):
+    """Query Gemini for the capital of a country.
+
+    Args:
+        country_name: Name of the country to query
+        api_key: Google Gemini API key
+
+    Yields:
+        Text chunks from the streaming response
+
+    Raises:
+        Exception: If there's an error generating content
+    """
+    client = genai.Client(api_key=api_key)
+    model = "gemini-flash-latest"
+    contents = f"What is the capital of {country_name}"
+
+    try:
+        for chunk in client.models.generate_content_stream(
+            model=model,
+            contents=contents,
+        ):
+            yield chunk.text
+    except Exception as e:
+        raise Exception(f"Error while generating content: {e}")
+
+
 def main():
     """Run the capital city query using Google Gemini with Phoenix tracing."""
     # Validate API key early and print a helpful message if missing
@@ -62,27 +89,13 @@ def main():
     # Setup Phoenix tracing (optional but recommended)
     setup_phoenix_tracing()
 
-    # Initialize Gemini client
-    client = genai.Client(api_key=api_key)
-
     # Ask the user for a country name; default to Earth if they press Enter
     country_name = ask_country(default="Earth")
 
-    model = "gemini-flash-latest"
-    contents = f"What is the capital of {country_name}"
-
-    try:
-        print(f"\nGenerating response for: {country_name}\n")
-        for chunk in client.models.generate_content_stream(
-            model=model,
-            contents=contents,
-        ):
-            print(chunk.text, end="")
-        print("\n")  # Add newline after streaming completes
-    except Exception as e:
-        # Surface a readable error message for debugging
-        print(f"\nError while generating content: {e}")
-        raise
+    print(f"\nGenerating response for: {country_name}\n")
+    for chunk in query_capital(country_name, api_key):
+        print(chunk, end="")
+    print("\n")  # Add newline after streaming completes
 
 
 if __name__ == "__main__":

@@ -1,0 +1,12 @@
+# Core dependencies
+google-genai==1.50.1
+python-dotenv==1.2.1
+arize-phoenix-otel==0.13.1
+
+# Web UI
+streamlit>=1.32.0
+
+# OpenTelemetry (auto-installed with arize-phoenix-otel, but listed for clarity)
+opentelemetry-api>=1.38.0
+opentelemetry-sdk>=1.38.0
+openinference-instrumentation-google-genai>=0.1.8
