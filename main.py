@@ -1,7 +1,6 @@
 import os
 import sys
 from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 from phoenix.otel import register
 
@@ -22,7 +21,7 @@ def ask_country(default: str | None = None) -> str:
     except EOFError:
         # Non-interactive environment: fall back to default or empty string
         return default or ""
-    return val or (default or "")
+    return val or default or ""
 
 
 def setup_phoenix_tracing():
@@ -44,12 +43,12 @@ def setup_phoenix_tracing():
         auto_instrument=True  # Auto-instrument based on installed dependencies
     )
     
-    print("✓ Phoenix tracing enabled")
+    print("Phoenix tracing enabled")
     return tracer_provider
 
 
-def generate():
-    """Generate content using Google Gemini with Phoenix tracing."""
+def main():
+    """Run the capital city query using Google Gemini with Phoenix tracing."""
     # Validate API key early and print a helpful message if missing
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -70,30 +69,13 @@ def generate():
     country_name = ask_country(default="Earth")
 
     model = "gemini-flash-latest"
-    contents = [
-        types.Content(
-            role="user",
-            parts=[
-                types.Part.from_text(text=f"What is the capital of {country_name}"),
-            ],
-        ),
-    ]
-    
-    generate_content_config = types.GenerateContentConfig(
-        thinking_config=types.ThinkingConfig(
-            thinking_budget=4096,
-        ),
-        image_config=types.ImageConfig(
-            image_size="1K",
-        ),
-    )
+    contents = f"What is the capital of {country_name}"
 
     try:
         print(f"\nGenerating response for: {country_name}\n")
         for chunk in client.models.generate_content_stream(
             model=model,
             contents=contents,
-            config=generate_content_config,
         ):
             print(chunk.text, end="")
         print("\n")  # Add newline after streaming completes
@@ -104,4 +86,4 @@ def generate():
 
 
 if __name__ == "__main__":
-    generate()
+    main()
